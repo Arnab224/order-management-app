@@ -94,7 +94,7 @@ const menuItems = [
 const seedMenu = async () => {
   const existingCount = await MenuItem.countDocuments();
 
-  if (existingCount <=4) {
+  if (existingCount <=5) {
     console.log("🍔 Menu already exists. Skipping seeding.");
     return;
   }
