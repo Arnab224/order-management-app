@@ -13,7 +13,6 @@ const getAllOrders = async () => {
 };
 
 const updateOrderStatus = async (id, status) => {
-  // Don't overwrite terminal states
   const order = await Order.findById(id);
   if (!order) return null;
   if (["DELIVERED", "CANCELLED"].includes(order.status)) return order;
