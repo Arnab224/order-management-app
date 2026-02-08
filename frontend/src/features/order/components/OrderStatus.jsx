@@ -7,7 +7,6 @@ import Loader from "../../../shared/components/Loader";
 import Navbar from "../../../shared/components/Navbar";
 import { FiCheck, FiClock, FiMapPin, FiShoppingBag, FiChevronRight } from "react-icons/fi";
 
-// Enhanced styling for steps to match the clean UI
 const statusSteps = {
   ORDER_RECEIVED: {
     label: "Order Received",
@@ -20,7 +19,7 @@ const statusSteps = {
     label: "Preparing",
     icon: <FiClock />,
     step: 2,
-    color: "orange", // Matching brand color
+    color: "orange", 
     description: "Our chefs are working on your order",
   },
   OUT_FOR_DELIVERY: {
