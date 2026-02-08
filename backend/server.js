@@ -1,45 +1,38 @@
 require("dotenv").config();
 const http = require("http");
 const { Server } = require("socket.io");
+const { seedMenu } = require("./scripts/seedMenu");
 
 const app = require("./app");
 const connectDB = require("./config/db");
-const seedMenu = require("./scripts/seedMenu");
+
+connectDB();
+
+const initializeData = async () => {
+if (process.env.AUTO_SEED === "true") {
+  await seedMenu();
+}
+}
+initializeData();
+
 
 const PORT = process.env.PORT || 3000;
 
-const startServer = async () => {
-  try {
-    await connectDB();
-    console.log("✅ MongoDB connected");
+const server = http.createServer(app);
 
-    if (process.env.AUTO_SEED === "true") {
-      await seedMenu();
-    }
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    credentials: true,
+  },
+});
 
-    const server = http.createServer(app);
+io.on("connection", (socket) => {
+  console.log("Socket connected:", socket.id);
+});
 
-    const io = new Server(server, {
-      cors: {
-        origin: "*",
-        credentials: true,
-      },
-    });
+app.set("io", io);
 
-    io.on("connection", (socket) => {
-      console.log("🔌 Socket connected:", socket.id);
-    });
-
-    app.set("io", io);
-
-    server.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-    });
-
-  } catch (err) {
-    console.error("❌ Server startup failed", err);
-    process.exit(1);
-  }
-};
-
-startServer();
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

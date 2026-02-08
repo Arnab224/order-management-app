@@ -1,3 +1,5 @@
+require("dotenv").config();
+const mongoose = require("mongoose");
 const MenuItem = require("../models/MenuItem");
 
 const menuItems = [
@@ -23,6 +25,7 @@ const menuItems = [
     rating: 4.2,
     deliveryTime: 30
   },
+
   {
     name: "Margherita Pizza",
     description: "Classic tomato sauce, mozzarella, and fresh basil",
@@ -45,6 +48,7 @@ const menuItems = [
     rating: 4.6,
     deliveryTime: 40
   },
+
   {
     name: "Chicken Biryani",
     description: "Aromatic basmati rice cooked with tender chicken and spices",
@@ -67,17 +71,19 @@ const menuItems = [
     rating: 4.7,
     deliveryTime: 30
   },
+
   {
     name: "Chocolate Lava Cake",
     description: "Warm chocolate cake with a gooey molten center",
     price: 149,
-    imageUrl: "https://hips.hearstapps.com/hmg-prod/images/chocolate-lava-cake-index-65c25056f21fb.jpg",
+    imageUrl: "https://hips.hearstapps.com/hmg-prod/images/chocolate-lava-cake-index-65c25056f21fb.jpg?crop=0.8891482670297961xw:1xh;center,top&resize=1200:*",
     category: "dessert",
     isVegetarian: true,
     isSpicy: false,
     rating: 4.8,
     deliveryTime: 20
   },
+
   {
     name: "Greek Salad",
     description: "Fresh cucumbers, tomatoes, olives, and feta cheese",
@@ -91,16 +97,25 @@ const menuItems = [
   }
 ];
 
-const seedMenu = async () => {
-  const existingCount = await MenuItem.countDocuments();
+async function seedMenu() {
+  try {
+    if (!process.env.MONGO_URI) {
+        throw new Error("MONGO_URI is not defined in .env");
+    }
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log("Connected to MongoDB for seeding");
 
-  if (existingCount <=5) {
-    console.log("🍔 Menu already exists. Skipping seeding.");
-    return;
+    await MenuItem.deleteMany({});
+    console.log("Cleared existing menu items");
+
+    await MenuItem.insertMany(menuItems);
+    console.log("✅ Menu seeded successfully with", menuItems.length, "items");
+
+    process.exit(0);
+  } catch (error) {
+    console.error("Error seeding menu:", error);
+    process.exit(1);
   }
+}
 
-  await MenuItem.insertMany(menuItems);
-  console.log(`✅ Menu seeded successfully with ${menuItems.length} items`);
-};
-
-module.exports = seedMenu;
+seedMenu();
