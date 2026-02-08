@@ -5,10 +5,8 @@ const placeOrder = async (req, res, next) => {
   try {
     const order = await orderService.createOrder(req.body);
 
-    /* 🔥 Get io instance from app */
     const io = req.app.get("io");
 
-    /* 🔥 Pass io to simulator (skip when running without sockets, e.g. tests) */
     if (io && typeof io.emit === "function") {
       simulateOrderStatus(order._id, io);
     }
