@@ -8,6 +8,7 @@
     "test:watch": "jest --watchAll",
     "dev": "nodemon server.js",
     "seed": "node scripts/seedMenu.js"
+
   },
   "keywords": [],
   "author": "",
