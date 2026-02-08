@@ -1,19 +1,12 @@
 require("dotenv").config();
 const http = require("http");
 const { Server } = require("socket.io");
-const { seedMenu } = require("./scripts/seedMenu");
 
 const app = require("./app");
 const connectDB = require("./config/db");
 
 connectDB();
 
-const initializeData = async () => {
-if (process.env.AUTO_SEED === "true") {
-  await seedMenu();
-}
-}
-initializeData();
 
 
 const PORT = process.env.PORT || 3000;
