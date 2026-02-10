@@ -1,11 +1,12 @@
 
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { socket } from "../../../shared/services/socket";
-import { getOrderStatus } from "../services/order.api";
+import { getOrderStatus, cancelOrder } from "../services/order.api";
 import Loader from "../../../shared/components/Loader";
 import Navbar from "../../../shared/components/Navbar";
-import { FiCheck, FiClock, FiMapPin, FiShoppingBag, FiChevronRight } from "react-icons/fi";
+import ConfirmModal from "../../../shared/components/ConfirmModal";
+import { FiCheck, FiClock, FiMapPin, FiShoppingBag, FiChevronRight, FiX } from "react-icons/fi";
 
 const statusSteps = {
   ORDER_RECEIVED: {
@@ -36,13 +37,23 @@ const statusSteps = {
     color: "green",
     description: "Enjoy your meal!",
   },
+  CANCELLED: {
+    label: "Cancelled",
+    icon: <FiX />,
+    step: 0,
+    color: "red",
+    description: "Order has been cancelled",
+  },
 };
 
 export default function OrderStatus() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     getOrderStatus(id)
@@ -64,6 +75,23 @@ export default function OrderStatus() {
 
     return () => socket.off("order-status-update");
   }, [id]);
+
+  const handleCancelOrder = async () => {
+    setCancelling(true);
+    try {
+      await cancelOrder(id);
+      setStatus("CANCELLED");
+      setShowCancelModal(false);
+      setTimeout(() => {
+        navigate("/orders");
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to cancel order:", err);
+      setError("Failed to cancel order. Please try again.");
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -99,6 +127,7 @@ export default function OrderStatus() {
 
   const currentStep = statusSteps[status]?.step || 1;
   const currentStatus = statusSteps[status];
+  const canCancel = status && status !== "DELIVERED" && status !== "CANCELLED";
 
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
@@ -137,7 +166,7 @@ export default function OrderStatus() {
             />
 
             <div className="relative flex justify-between">
-              {Object.entries(statusSteps).map(([key, value]) => {
+              {Object.entries(statusSteps).filter(([key]) => key !== "CANCELLED").map(([key, value]) => {
                 const isActive = currentStep >= value.step;
                 const isCurrent = status === key;
 
@@ -186,7 +215,32 @@ export default function OrderStatus() {
           </div>
         </div>
 
-        {status === "DELIVERED" ? (
+        {canCancel && (
+          <div className="mb-8 flex justify-center">
+            <button
+              onClick={() => setShowCancelModal(true)}
+              disabled={cancelling}
+              className="flex items-center gap-2 bg-red-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-red-700 transition-colors shadow-lg shadow-red-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FiX className="w-5 h-5" />
+              {cancelling ? "Cancelling..." : "Cancel Order"}
+            </button>
+          </div>
+        )}
+
+        {status === "CANCELLED" ? (
+             <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-6 text-center">
+                <span className="text-5xl block mb-3">❌</span>
+                <h3 className="text-xl font-bold text-red-600 mb-2">Order Cancelled</h3>
+                <p className="text-gray-600 mb-6">This order has been cancelled</p>
+                <Link
+                    to="/"
+                    className="inline-flex items-center gap-2 bg-gray-800 text-white px-8 py-3 rounded-full font-semibold hover:bg-gray-900 transition-colors shadow-lg shadow-gray-200"
+                >
+                    Order Again <FiChevronRight />
+                </Link>
+             </div>
+        ) : status === "DELIVERED" ? (
              <div className="flex gap-4 justify-center">
                 <Link
                     to="/"
@@ -218,6 +272,16 @@ export default function OrderStatus() {
             </div>
         )}
       </main>
+
+      <ConfirmModal
+        isOpen={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        onConfirm={handleCancelOrder}
+        title="Cancel Order?"
+        message="Are you sure you want to cancel this order? This action cannot be undone and your order will not be prepared or delivered."
+        confirmText="Yes, Cancel Order"
+        cancelText="No, Keep Order"
+      />
     </div>
   );
 }

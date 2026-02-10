@@ -29,6 +29,12 @@ const statusConfig = {
     color: "bg-green-100 text-green-700",
     borderColor: "border-green-200"
   },
+  CANCELLED: {
+    label: "Cancelled",
+    icon: "❌",
+    color: "bg-red-100 text-red-700",
+    borderColor: "border-red-200"
+  },
 };
 
 export default function OrderHistory() {
